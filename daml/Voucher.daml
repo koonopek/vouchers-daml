@@ -1,0 +1,79 @@
+module Voucher where
+
+type VoucherKey = (Party, Text)
+type Balance = Int
+
+template Voucher with
+    symbol: Text
+    owner: Party
+    whitelist: [Party]
+  where
+    signatory owner
+
+    key (owner, symbol): VoucherKey
+    maintainer key._1
+
+    nonconsuming choice Issue : ContractId VoucherBalanceApprove with
+        for: Party
+        startBalance: Balance
+      controller owner
+      do
+        create VoucherBalanceApprove with  owner=for, balance=startBalance, asset = this
+
+template VoucherBalanceApprove with
+    owner: Party
+    balance: Balance
+    asset: Voucher
+  where
+    signatory asset.owner
+    observer owner
+
+
+    choice Accept : ContractId VoucherBalance
+      controller owner
+      do
+        create VoucherBalance with owner, balance, asset
+
+template VoucherBalance with
+    owner: Party
+    balance: Balance
+    asset: Voucher
+  where
+    signatory owner, asset.owner
+
+    key (owner, asset.symbol): VoucherKey
+    maintainer key._1
+
+    --- TRANSFER BEGIN    
+    nonconsuming choice Transfer : ContractId TransferApproval with
+        amount: Balance
+        receiver: Party
+      controller owner
+      do
+        assertMsg "Receiver have to be whitelisted" (elem receiver asset.whitelist)
+        archive self
+        create this with balance = balance - amount
+        create TransferApproval with amount, voucher = asset, target = receiver, sender = owner
+    --- TRANSFER END
+
+    --- RECEIVE BEGIN
+    choice Receive: ContractId VoucherBalance with
+        transferApprovalId: ContractId TransferApproval
+      controller owner
+      do
+        transferApproval <- fetch transferApprovalId
+
+        create VoucherBalance with owner, balance = balance + transferApproval.amount, asset
+    --- RECEIVER END
+
+
+
+template TransferApproval with
+    amount: Balance
+    voucher: Voucher
+    target: Party
+    sender: Party
+  where
+    signatory sender
+    observer target
+        

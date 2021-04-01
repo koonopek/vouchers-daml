@@ -1,0 +1,52 @@
+module Test.Voucher where
+
+import Voucher
+
+create_voucher = scenario do
+  admin <- getParty "admin"
+  teatr <- getParty "teatr"
+
+  submit admin $ create Voucher with symbol = "USD", owner = admin, whitelist = [teatr]
+
+create_voucher_balance = scenario do
+  admin <- getParty "admin"
+  teatr <- getParty "teatr"
+  bob <- getParty "bob"
+  voucherId <- create_voucher
+  
+  vba_bob <- submit admin $ exercise voucherId Issue with for = bob, startBalance = 100
+  vb_bob <- submit bob $ exercise vba_bob Accept
+
+  vba_teatr <- submit admin $ exercise voucherId Issue with for = teatr, startBalance = 0
+  vb_teatr <- submit teatr $ exercise vba_teatr Accept
+
+  return (vb_teatr, vb_bob)
+
+transfer = scenario do
+  bob <- getParty "bob"
+  teatr <- getParty "teatr"
+
+  (vb_teatr, vb_bob) <- create_voucher_balance
+
+  transfer_approval_bob_to_teatr <- submit bob $ exercise vb_bob Transfer with amount = 10, receiver=teatr
+
+  vb_teatr2 <- submit teatr $ exercise vb_teatr Receive with transferApprovalId = transfer_approval_bob_to_teatr
+
+  submitMustFail teatr $ exercise vb_teatr2 Transfer with amount = 10, receiver=bob
+
+  return ()
+
+
+create_voucher_balance_without_permission = scenario do
+  gay <- getParty "gay"
+  admin <- getParty "admin"
+  voucherId <- create_voucher
+
+  submitMustFail gay $ create VoucherBalance with owner=gay, balance=100, asset = Voucher with symbol="USD", owner=admin, whitelist = []
+
+create_voucher_balance_approve_without_permission = scenario do
+  gay <- getParty "gay"
+  admin <- getParty "admin"
+  voucherId <- create_voucher
+  
+  submitMustFail gay $ create VoucherBalanceApprove with owner=gay, balance=20, asset = Voucher with symbol="USD", owner=admin, whitelist = []

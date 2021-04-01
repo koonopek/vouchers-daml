@@ -1,0 +1,10 @@
+module User where
+
+template User with
+    name: Party
+    email: Text
+  where
+    signatory name
+
+    key name: Party
+    maintainer key

@@ -1,0 +1,10 @@
+module Test.User where
+
+import User
+
+create_user = scenario do
+  alice <- getParty "alice"
+  submit alice $ create User with name = alice, email = "mail@mail.com"
+  
+
+
