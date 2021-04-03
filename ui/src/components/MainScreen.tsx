@@ -23,7 +23,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
         </Menu.Item>
         <Menu.Menu position='right' className='test-select-main-menu'>
           <Menu.Item position='right'>
-            <Icon name="user outline" style={{marginRight: '5px'}}/>{useParty()}
+            <Icon name="user outline" style={{marginRight: '5px'}}/>{useParty().slice(0,7)}
           </Menu.Item>
           <Menu.Item
             position='right'

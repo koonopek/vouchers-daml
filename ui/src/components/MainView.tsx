@@ -1,21 +1,21 @@
-import { User, Voucher } from '@daml.js/daml-vouchers';
-import { useLedger, useParty, useStreamFetchByKeys } from '@daml/react';
+import { Voucher } from '@daml.js/daml-vouchers';
+import { useParty, useStreamQueries } from '@daml/react';
 import React from 'react';
-import { Container, Divider, Grid, Header, Icon, Segment } from 'semantic-ui-react';
+import { Container, Divider, Grid, Header, Icon, List, Segment } from 'semantic-ui-react';
+import { WalletView } from './WalletView';
 import CreateVoucherModal from './CreateVoucherModal';
-import { VoucherView }  from './VoucherView';
+import { VoucherView } from './VoucherView';
+import { useAutoAcceptVoucherBalanceApprovals } from './useAutoAccept';
 
 // USERS_BEGIN
 const MainView: React.FC = () => {
-  const username = useParty();
-  const myUserResult = useStreamFetchByKeys(User.User, () => [username], [username]);
-  const myUser = myUserResult.contracts[0]?.payload;
+  useAutoAcceptVoucherBalanceApprovals();
+  const party = useParty();
 
-  const ledger = useLedger();
+  const vouchers = useStreamQueries(Voucher.Voucher).contracts;
 
-  const vouchers = useStreamFetchByKeys(Voucher.Voucher, () => [{ _1: username, _2: "usd" }], []).contracts;
-
-  ledger.create(Voucher.Voucher, {owner: useParty(), symbol: 'usd', whitelist: []});
+  const walletQuery = () => [{owner: party}];
+  const wallets = useStreamQueries(Voucher.VoucherBalance, walletQuery, [party]).contracts;
 
   return (
     <Container fluid>
@@ -28,11 +28,18 @@ const MainView: React.FC = () => {
               <Header as='h2'>
                 <Icon name='globe' />
                 <Header.Content>
-                  The Network
-                  <Header.Subheader>My followers and users they are following</Header.Subheader>
+                  Wallets
+                  <Header.Subheader>Your voucher wallets</Header.Subheader>
                 </Header.Content>
               </Header>
               <Divider />
+              <List divided relaxed >
+                {
+                  wallets.map(
+                    wallet => wallet && <WalletView voucherBalanceId={wallet.contractId} asset={wallet.payload.asset} balance={wallet.payload.balance}/>
+                    )
+                }
+              </List>
             </Segment>
           </Grid.Column>
         </Grid.Row>
@@ -44,12 +51,18 @@ const MainView: React.FC = () => {
                 <Icon name='dollar sign' />
                 <Header.Content>
                   Vouchers
-                  <Header.Subheader>Vouchers you have created.</Header.Subheader>
+                  <Header.Subheader>Vouchers you have created</Header.Subheader>
                 </Header.Content>
               </Header>
               <CreateVoucherModal />
-              {vouchers.map(v => <VoucherView symbol={v!.payload.symbol} whitelist={v!.payload.whitelist}></VoucherView>) }
               <Divider />
+              <List divided relaxed>
+                {
+                  vouchers.map(
+                    v => <VoucherView symbol={v!.payload.symbol} whitelist={v!.payload.whitelist}/>
+                  )
+                }
+              </List>
             </Segment>
           </Grid.Column>
         </Grid.Row>

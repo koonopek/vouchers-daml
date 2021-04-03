@@ -17,6 +17,10 @@ create_voucher_balance = scenario do
   vba_bob <- submit admin $ exercise voucherId Issue with for = bob, startBalance = 100
   vb_bob <- submit bob $ exercise vba_bob Accept
 
+  -- Can not create two voucher balances
+  vba_bob_2 <- submit admin $ exercise voucherId Issue with for = bob, startBalance = 100
+  submitMustFail bob $ exercise vba_bob_2 Accept
+
   vba_teatr <- submit admin $ exercise voucherId Issue with for = teatr, startBalance = 0
   vb_teatr <- submit teatr $ exercise vba_teatr Accept
 
@@ -36,6 +40,25 @@ transfer = scenario do
 
   return ()
 
+transfer_not_whitelisted = scenario do
+  bob <- getParty "bob"
+  teatr <- getParty "teatr"
+
+  (vb_teatr, vb_bob) <- create_voucher_balance
+
+  submitMustFail teatr $ exercise vb_teatr Transfer with amount = 10, receiver=bob
+
+  return ()
+
+transfer_not_enough_amount = scenario do
+  bob <- getParty "bob"
+  teatr <- getParty "teatr"
+
+  (vb_teatr, vb_bob) <- create_voucher_balance
+
+  submitMustFail bob $ exercise vb_bob Transfer with amount = 110, receiver=teatr
+
+  return ()
 
 create_voucher_balance_without_permission = scenario do
   gay <- getParty "gay"

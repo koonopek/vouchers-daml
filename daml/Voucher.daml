@@ -1,6 +1,7 @@
 module Voucher where
 
 type VoucherKey = (Party, Text)
+type VoucherBalanceKey = (Party, Text, Party)
 type Balance = Int
 
 template Voucher with
@@ -17,8 +18,10 @@ template Voucher with
         for: Party
         startBalance: Balance
       controller owner
-      do
+      do       
         create VoucherBalanceApprove with  owner=for, balance=startBalance, asset = this
+
+
 
 template VoucherBalanceApprove with
     owner: Party
@@ -28,11 +31,15 @@ template VoucherBalanceApprove with
     signatory asset.owner
     observer owner
 
-
     choice Accept : ContractId VoucherBalance
       controller owner
       do
         create VoucherBalance with owner, balance, asset
+
+    choice Reject : ()
+      controller owner
+      do
+        return ()
 
 template VoucherBalance with
     owner: Party
@@ -41,7 +48,7 @@ template VoucherBalance with
   where
     signatory owner, asset.owner
 
-    key (owner, asset.symbol): VoucherKey
+    key (owner, asset.symbol, asset.owner): VoucherBalanceKey
     maintainer key._1
 
     --- TRANSFER BEGIN    
@@ -51,6 +58,7 @@ template VoucherBalance with
       controller owner
       do
         assertMsg "Receiver have to be whitelisted" (elem receiver asset.whitelist)
+        assertMsg "Not enough balance" (amount <= balance)
         archive self
         create this with balance = balance - amount
         create TransferApproval with amount, voucher = asset, target = receiver, sender = owner
