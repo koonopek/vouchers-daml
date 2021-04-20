@@ -1,0 +1,1 @@
+daml sandbox --auth-jwt-hs256-unsafe=alamakota --ledgerid=daml-voucher .daml/dist/daml-vouchers-0.1.0.dar --sql-backend-jdbcurl "jdbc:postgresql://172.17.0.1:5432/daml?user=admin&password=admin"
