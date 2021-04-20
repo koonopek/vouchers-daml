@@ -1,0 +1,16 @@
+module Group where
+
+template GroupMember
+    with
+      group : Party
+      member : Party
+    where
+      signatory group
+      observer member
+      key (group, member) : (Party, Party)
+      maintainer key._1
+
+      nonconsuming choice IsMember : Bool with
+       controller member
+          do
+            return True

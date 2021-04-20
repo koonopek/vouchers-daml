@@ -1,5 +1,7 @@
 module Voucher where
 
+import Group
+
 type VoucherKey = (Party, Text)
 type VoucherBalanceKey = (Party, Text, Party)
 type Balance = Int
@@ -8,6 +10,7 @@ template Voucher with
     symbol: Text
     owner: Party
     whitelist: [Party]
+    issuerGroup : Party
   where
     signatory owner
 
@@ -18,7 +21,8 @@ template Voucher with
         for: Party
         startBalance: Balance
       controller owner
-      do       
+      do
+        exerciseByKey @GroupMember (issuerGroup, owner) IsMember 
         create VoucherBalanceApprove with  owner=for, balance=startBalance, asset = this
 
 
@@ -40,6 +44,8 @@ template VoucherBalanceApprove with
       controller owner
       do
         return ()
+
+
 
 template VoucherBalance with
     owner: Party

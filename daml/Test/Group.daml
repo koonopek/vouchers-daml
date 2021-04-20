@@ -1,0 +1,22 @@
+module Test.Group where
+
+import Daml.Script
+import Group
+
+group_member_create = script do
+    alice <- allocateParty "alice"
+    bob <- allocateParty "bob"
+    group <- allocateParty "groupRoot"
+
+    submit group do
+        createCmd GroupMember with group = group, member = alice -- Add alice to group
+
+    submit alice do exerciseByKeyCmd @GroupMember (group, alice) IsMember
+
+    submitMustFail bob do exerciseByKeyCmd @GroupMember (group, alice) IsMember
+
+    submit group do
+        createCmd GroupMember with group = group, member = bob  -- Add bob to group
+
+    submit bob do exerciseByKeyCmd @GroupMember (group, bob) IsMember
+

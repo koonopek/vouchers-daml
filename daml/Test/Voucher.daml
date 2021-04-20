@@ -1,17 +1,24 @@
 module Test.Voucher where
 
 import Voucher
+import Group
 
 create_voucher = scenario do
   admin <- getParty "admin"
   teatr <- getParty "teatr"
+  issuerGroup <- getParty "issuerGroup"
 
-  submit admin $ create Voucher with symbol = "USD", owner = admin, whitelist = [teatr]
+  submit admin $ create Voucher with symbol = "USD", owner = admin, whitelist = [teatr], issuerGroup
 
 create_voucher_balance = scenario do
   admin <- getParty "admin"
   teatr <- getParty "teatr"
   bob <- getParty "bob"
+
+  issuerGroup <- getParty "issuerGroup"  -- Admin have to be added to issuer group to issue new tokens
+  submit issuerGroup do
+    create GroupMember with group = issuerGroup, member = admin
+
   voucherId <- create_voucher
   
   vba_bob <- submit admin $ exercise voucherId Issue with for = bob, startBalance = 100
@@ -63,13 +70,17 @@ transfer_not_enough_amount = scenario do
 create_voucher_balance_without_permission = scenario do
   gay <- getParty "gay"
   admin <- getParty "admin"
+  issuerGroup <- getParty "issuerGroup"
+
   voucherId <- create_voucher
 
-  submitMustFail gay $ create VoucherBalance with owner=gay, balance=100, asset = Voucher with symbol="USD", owner=admin, whitelist = []
+  submitMustFail gay $ create VoucherBalance with owner=gay, balance=100, asset = Voucher with symbol="USD", owner=admin, whitelist = [], issuerGroup
 
 create_voucher_balance_approve_without_permission = scenario do
   gay <- getParty "gay"
   admin <- getParty "admin"
+  issuerGroup <- getParty "issuerGroup"
+
   voucherId <- create_voucher
   
-  submitMustFail gay $ create VoucherBalanceApprove with owner=gay, balance=20, asset = Voucher with symbol="USD", owner=admin, whitelist = []
+  submitMustFail gay $ create VoucherBalanceApprove with owner=gay, balance=20, asset = Voucher with symbol="USD", owner=admin, whitelist = [], issuerGroup
