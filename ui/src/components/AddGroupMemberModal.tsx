@@ -1,36 +1,33 @@
-import { Group, Voucher } from '@daml.js/daml-vouchers';
+import { Group } from '@daml.js/daml-vouchers';
 import { useLedger, useParty } from '@daml/react';
 import React from 'react';
 import { useAlert } from 'react-alert';
 import { Button, Form, Header, Label, Modal, Segment } from 'semantic-ui-react';
-import { ISSUER_GROUP } from '../config';
 
 
-function CreateVoucherModal() {
+function AddGroupMemberModal() {
     const [open, setOpen] = React.useState<boolean>(false)
-    const [symbol, setSymbol] = React.useState('');
     const party = useParty();
     const ledger = useLedger();
     const alert = useAlert();
 
-    const [whitelist, setWhitelist] = React.useState<string[]>([]);
+    const [members, setMembers] = React.useState<string[]>([]);
     const [newPartie, setNewPartie] = React.useState<string>('');
 
-    const createVoucher = () => {
-        if (symbol === '' || whitelist === []) return;
-
-        ledger.create(Voucher.Voucher, { owner: party, symbol, whitelist, issuerGroup: ISSUER_GROUP })
-            .then(() => alert.success(`Successfully created voucher ${symbol}`))
-            .catch(() => alert.error(`Failed to create voucher ${symbol}`))
-
-        setOpen(false);
-    }
-
-    const addToWhitelist = () => {
-        if (!whitelist.includes(newPartie) || newPartie === '') {
-            setWhitelist([...whitelist, newPartie]);
+    const addToMembers = () => {
+        if (!members.includes(newPartie) || newPartie === '') {
+            setMembers([...members, newPartie]);
             setNewPartie('');
         }
+    }
+
+    const addMember = () => {
+        members.map(
+            newMember => ledger.create(Group.GroupMember, { group: party, member: newMember })
+                .then(() => alert.success(`Added member ${newMember}`))
+                .catch(() => alert.error(`Failed to add member ${newMember}`))
+        )
+        setOpen(false);
     }
 
     return (
@@ -38,22 +35,13 @@ function CreateVoucherModal() {
             onClose={() => setOpen(false)}
             onOpen={() => setOpen(true)}
             open={open}
-            trigger={<Button primary>Create voucher</Button>}>
-            <Modal.Header>Create new voucher</Modal.Header>
+            trigger={<Button primary>Add member</Button>}>
+            <Modal.Header>Add members</Modal.Header>
             <Modal.Content >
                 <Modal.Description>
-                    <Header>Voucher settings</Header>
+                    <Header>Members</Header>
                     <Form size='large' className='test-select-login-screen'>
                         <Segment>
-                            <Form.Input
-                                fluid
-                                icon='money'
-                                iconPosition='left'
-                                placeholder='Symbol'
-                                value={symbol}
-                                className='test-select-username-field'
-                                onChange={e => setSymbol(e.currentTarget.value)}
-                            />
                             <Form.Input
                                 fluid
                                 icon='user'
@@ -63,12 +51,12 @@ function CreateVoucherModal() {
                                 className='test-select-username-field'
                                 action={
                                     <Button
-                                        onClick={addToWhitelist}
+                                        onClick={addToMembers}
                                     >Add</Button>
                                 }
                                 onChange={e => setNewPartie(e.currentTarget.value)}
                             />
-                            {whitelist.map((partie: string) => <Label key={partie}>{partie}</Label>)}
+                            {members.map((partie: string) => <Label key={partie}>{partie}</Label>)}
                         </Segment>
 
                     </Form>
@@ -79,10 +67,10 @@ function CreateVoucherModal() {
                     Cancel
                 </Button>
                 <Button
-                    content="Create voucher"
+                    content="Add member"
                     labelPosition='right'
                     icon='rocket'
-                    onClick={createVoucher}
+                    onClick={addMember}
                     positive
                 />
             </Modal.Actions>
@@ -91,4 +79,4 @@ function CreateVoucherModal() {
 }
 
 
-export default CreateVoucherModal;
+export default AddGroupMemberModal;

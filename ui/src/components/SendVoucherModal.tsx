@@ -27,6 +27,7 @@ function SendVoucherModal({ owner, symbol, assetOwner }: SendVoucherProps) {
         )
         .then(() => alert.success(`Successfully sent voucher to ${receiver}`))
         .catch(() => alert.error(`Failed to sent voucher to ${receiver}`))
+        setOpen(false);
     };
 
     return (

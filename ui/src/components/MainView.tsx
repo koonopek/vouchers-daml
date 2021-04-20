@@ -1,11 +1,12 @@
-import { Voucher } from '@daml.js/daml-vouchers';
-import { useParty, useStreamQueries } from '@daml/react';
+import { Group, Voucher } from '@daml.js/daml-vouchers';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import React from 'react';
 import { Container, Divider, Grid, Header, Icon, List, Segment } from 'semantic-ui-react';
 import { WalletView } from './WalletView';
 import CreateVoucherModal from './CreateVoucherModal';
 import { VoucherView } from './VoucherView';
 import { useAutoAcceptVoucherBalanceApprovals } from './useAutoAccept';
+import AddGroupMemberModal from './AddGroupMemberModal';
 
 // USERS_BEGIN
 const MainView: React.FC = () => {
@@ -17,9 +18,13 @@ const MainView: React.FC = () => {
   const walletQuery = () => [{owner: party}];
   const wallets = useStreamQueries(Voucher.VoucherBalance, walletQuery, [party]).contracts;
 
+  const isGroup = party.endsWith('Group');
+  const groupMembers = useStreamQueries(Group.GroupMember).contracts.map( contract => contract.payload);
+  
   return (
     <Container fluid>
       <Grid centered >
+        {/* BEGIN WALLETS */}
         <Grid.Row stretched>
           <Grid.Column>
             <Header as='h1' size='huge' color='blue' textAlign='center' style={{ padding: '1ex 0em 0ex 0em' }}>
@@ -43,7 +48,9 @@ const MainView: React.FC = () => {
             </Segment>
           </Grid.Column>
         </Grid.Row>
+        {/* END WALLETS */}
 
+        {/* BEGIN VOUCHERS */}
         <Grid.Row>
           <Grid.Column>
             <Segment>
@@ -66,7 +73,32 @@ const MainView: React.FC = () => {
             </Segment>
           </Grid.Column>
         </Grid.Row>
+        {/* END VOUCHERS */}
 
+        {/* BEGIN GROUPS */}
+        {isGroup ? <Grid.Row>
+          <Grid.Column>
+            <Segment>
+              <Header as='h2'>
+                <Icon name='dollar sign' />
+                <Header.Content>
+                  {party.split(/(?=[A-Z])/).join(' ')}
+                  <Header.Subheader>Access groups</Header.Subheader>
+                </Header.Content>
+              </Header>
+              <AddGroupMemberModal></AddGroupMemberModal>
+              <Divider />
+              <List divided relaxed>
+                {
+                  groupMembers.map( 
+                    groupMember => <List.Item icon="angle right" content={groupMember.member}/>
+                    )
+                }
+              </List>
+            </Segment>
+          </Grid.Column>
+        </Grid.Row> : null}
+        {/* END GROUPS */}
       </Grid>
     </Container>
   );

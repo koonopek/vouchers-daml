@@ -15,12 +15,14 @@ type Props = {
  */
 const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
 
   const login = useCallback(async (credentials: Credentials) => {
     try {
       const ledger = new Ledger({ token: credentials.token, httpBaseUrl });
       let userContract = await ledger.fetchByKey(User.User, credentials.party);
-      
+
       if (userContract === null) {
         const user = { username: credentials.party };
         userContract = await ledger.create(User.User, { email: user.username, name: user.username });
@@ -32,9 +34,35 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     }
   }, [onLogin]);
 
+
+  async function postData(url = '', data = {}) {
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      redirect: 'follow',
+      referrerPolicy: 'no-referrer',
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+
+
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    const credentials = computeCredentials(username);
+
+    const response = await postData('http://localhost:3000/auth',{ password, username: username});
+
+    const credentials: Credentials = {
+      ledgerId: ledgerId,
+      party: username,
+      token: response.access_token
+    }
+
     await login(credentials);
   }
 
@@ -64,7 +92,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
           <Header.Content>
             Voucher
             App
-            <Icon circular style={{marginLeft : '10px'}} name="rocket"></Icon>
+            <Icon circular style={{ marginLeft: '10px' }} name="rocket"></Icon>
           </Header.Content>
         </Header>
         <Form size='large' className='test-select-login-screen'>
@@ -80,6 +108,16 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
                   value={username}
                   className='test-select-username-field'
                   onChange={e => setUsername(e.currentTarget.value)}
+                />
+                <Form.Input
+                  fluid
+                  icon='lock'
+                  iconPosition='left'
+                  placeholder='Password'
+                  input='password'
+                  value={password}
+                  className='test-select-password-field'
+                  onChange={e => setPassword(e.currentTarget.value)}
                 />
                 <Button
                   primary

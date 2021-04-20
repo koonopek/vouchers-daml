@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple';
-import { ledgerId } from './config';
+import { ISSUER_GROUP, ledgerId } from './config';
 
 export const APPLICATION_ID: string = 'daml-vouchers';
 
 // NOTE: This is for testing purposes only.
 // To handle authentication properly,
 // see https://docs.daml.com/app-dev/authentication.html.
-export const SECRET_KEY: string = 'secret';
+export const SECRET_KEY: string = 'alamakota';
 
 export type Credentials = {
   party: string;
@@ -21,7 +21,7 @@ function computeToken(party: string): string {
   const payload = {
     "https://daml.com/ledger-api": {
       "ledgerId": ledgerId,
-      "applicationId": APPLICATION_ID,
+      "applicationId": APPLICATION_ID, 
       "actAs": [party]
     }
   };

@@ -20,9 +20,11 @@ export const ledgerId: string =
   deploymentMode === DeploymentMode.PROD_DABL
   ? window.location.hostname.split('.')[0]
   : process.env.REACT_APP_LEDGER_ID
-  ?? 'daml-vouchers-sandbox';
+  ?? 'daml-voucher';
 
 export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
   ? `https://api.projectdabl.com/data/${ledgerId}/`
   : undefined;
+
+export const ISSUER_GROUP = "IssuerGroup";
