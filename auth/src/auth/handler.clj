@@ -4,6 +4,7 @@
             [buddy.sign.jwt :as jwt]
             [auth.token :as token]
             [auth.access-resolver :as acl]
+            [ring.util.response :refer [resource-response response]]
             [failjure.core :as f]
             [jumblerg.middleware.cors :refer [wrap-cors]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]))
@@ -29,8 +30,9 @@
   ))
 
 (defroutes app-routes
-  (GET "/" [] {:status 200 :body "ok"})
+  (GET  "/" [] (resource-response "index.html" {:root "public"}))
   (POST "/auth" [:as request] (auth request))
+  (route/resources "/")
   (route/not-found "Not found"))
 
 
@@ -48,9 +50,9 @@
 
 (def app
   (-> un-corse-routes
-  identity
-  wrap-print-request
-  wrap-json-body
-  wrap-json-response
+        identity
+        wrap-print-request
+        wrap-json-body
+        wrap-json-response
   ))
 

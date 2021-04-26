@@ -55,7 +55,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await postData('http://localhost:3000/auth',{ password, username: username});
+    const response = await postData('/auth',{ password, username: username});
 
     const credentials: Credentials = {
       ledgerId: ledgerId,

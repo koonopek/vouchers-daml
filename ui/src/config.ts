@@ -25,6 +25,6 @@ export const ledgerId: string =
 export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
   ? `https://api.projectdabl.com/data/${ledgerId}/`
-  : undefined;
+  : process.env.REACT_APP_HTTP_JSON_HOST;
 
 export const ISSUER_GROUP = "IssuerGroup";
